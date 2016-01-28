@@ -27,3 +27,10 @@ core
 luarpc*
 *.map
 .idea
+
+
+.cached_payload
+build/
+romfs/autorun.lua
+romfs/cord.lua
+romfs/stormsh.lua
