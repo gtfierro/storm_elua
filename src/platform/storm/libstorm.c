@@ -148,6 +148,7 @@ int32_t __attribute__((naked)) k_syscall_ex_ri32_uint32_vptr_uint32_vptr_vptr(ui
 #define routingtable_getroute(key, buffer) k_syscall_ex_ri32_u32_u32(0x703, (key), (buffer))
 #define routingtable_lookuproute(prefix, prefix_len, buffer) k_syscall_ex_rcptr_u32_u32(0x704, (prefix), (prefix_len), (buffer))
 #define routingtable_gettable(size, buffer) k_syscall_ex_ri32_u32_u32(0x705, (size), (buffer))
+#define routingtable_ignoreneighbor(address) k_syscall_ex_ri32_cptr(0x706, (address))
 
 #define aes_encrypt(iv, mlen, message, dest) \
     k_syscall_ex_ri32_cptr_u32_cptr_cptr(0x801, (iv),(mlen),(message),(dest))
@@ -525,6 +526,18 @@ int libstorm_os_gettable( lua_State *L )
     return 1;
 }
 
+int libstorm_os_ignoreneighbor( lua_State *L )
+{
+    char *errparam = "expected (address)";
+    char *address;
+    int rv;
+    if (lua_gettop(L) != 1 || lua_isnil(L, 1)) return luaL_error(L, errparam);
+    address = luaL_checkstring(L, 1);
+    rv = routingtable_ignoreneighbor(address);
+    lua_pushnumber(L, rv);
+    return 1;
+}
+
 
 // Lua: storm.io.set( value, pin1, pin2, ..., pinn )
 int libstorm_io_set( lua_State *L )
@@ -593,7 +606,7 @@ int libstorm_io_set_pull( lua_State *L )
     for( i = 2; i <= lua_gettop( L ); i ++ )
     {
         pinspec = luaL_checkint( L, i );
-        if (pinspec < 0 || pinspec > MAXPINSPEC) 
+        if (pinspec < 0 || pinspec > MAXPINSPEC)
             return luaL_error( L, "invalid IO pin");
         rv = simplegpio_set_pull(dir, pinspec_map[pinspec]);
         if (rv != 0)
@@ -1053,7 +1066,7 @@ static int libstorm_io_watch_impl(lua_State *L, int repeat)
     }
     watchtype = luaL_checkinteger(L, 1);
     pin = luaL_checkinteger(L, 2);
-    if (pin < 0 || pin > MAXPINSPEC)	
+    if (pin < 0 || pin > MAXPINSPEC)
         return luaL_error( L, "invalid IO pin");
     if (watchtype < 0 || watchtype > 2)
         return luaL_error(L, "invalid change type");
@@ -1314,7 +1327,7 @@ int libstorm_bl_addcharacteristic(lua_State *L)
     cbref = luaL_ref(L, LUA_REGISTRYINDEX); //callback
     uuid = lua_tonumber(L, 2);
     svc_handle = lua_tonumber(L, 1);
-    
+
     handle = bl_addcharacteristic(svc_handle, uuid, bl_write_callback, (void*) cbref);
     lua_pushnumber(L, handle);
     return 1;
@@ -1540,7 +1553,7 @@ int libstorm_flash_read(lua_State *L)
 }
 // Module function map
 #define MIN_OPT_LEVEL 2
-#include "lrodefs.h" 
+#include "lrodefs.h"
 const LUA_REG_TYPE libstorm_io_map[] =
 {
     { LSTRKEY( "set_mode" ), LFUNCVAL ( libstorm_io_set_mode ) },
@@ -1630,6 +1643,7 @@ const LUA_REG_TYPE libstorm_os_map[] =
     { LSTRKEY( "getroute" ), LFUNCVAL ( libstorm_os_getroute ) },
     { LSTRKEY( "lookuproute" ), LFUNCVAL ( libstorm_os_lookuproute ) },
     { LSTRKEY( "gettable" ), LFUNCVAL ( libstorm_os_gettable ) },
+    { LSTRKEY( "ignoreNeighbor" ), LFUNCVAL ( libstorm_os_ignoreneighbor ) },
     { LSTRKEY( "setpowerlock"), LFUNCVAL ( libstorm_os_setpowerlock) },
     { LSTRKEY( "ROUTE_IFACE_ALL" ), LNUMVAL ( 0 ) },
     { LSTRKEY( "ROUTE_IFACE_154" ), LNUMVAL ( 1 ) },
