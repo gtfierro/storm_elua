@@ -1,0 +1,9 @@
+ball ()
+{
+    rm -rf bprod
+    rm *.elf
+    lua build_elua.lua target=lualong allocator=simple output_dir=bprod board=storm \
+    build_mode=build_dir_linearized romfs=compile build_dir=build
+}
+ball
+sload programall bprod/elua_lualong_storm.elf && rlwrap sload tailall -p
