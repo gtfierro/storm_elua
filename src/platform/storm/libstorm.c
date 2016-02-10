@@ -1571,10 +1571,9 @@ int libstorm_flash_getattr(lua_State *L)
         return luaL_error(L, "Could not get attribute %d", index);
     }
     lua_pushstring(L, key);
-    lua_pushnumber(L, val_len);
-    lua_pushlstring(L, val, val_len);
     // push the value on the stack
-    return 3;
+    lua_pushlstring(L, val, val_len);
+    return 2;
 }
 
 // Module function map
