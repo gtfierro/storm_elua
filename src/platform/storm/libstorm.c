@@ -96,6 +96,10 @@ int32_t __attribute__((naked)) k_syscall_ex_ri32_uint32_vptr_uint32_vptr_vptr(ui
 {
     __syscall_body(ABI_ID_SYSCALL_EX);
 }
+int32_t __attribute__((naked)) k_syscall_ex_getflashattr(uint32_t id, uint32_t a, uint32_t b, uint32_t c, uint8_t *d)
+{
+    __syscall_body(ABI_ID_SYSCALL_EX);
+}
 //Some driver specific syscalls
 //--------- GPIO
 #define simplegpio_set_mode(dir,pinspec) k_syscall_ex_ri32_u32_u32(0x101,(dir),(pinspec))
@@ -162,6 +166,7 @@ int32_t __attribute__((naked)) k_syscall_ex_ri32_uint32_vptr_uint32_vptr_vptr(ui
 
 #define flash_write(addr, buf, len, cb, r) k_syscall_ex_ri32_uint32_vptr_uint32_vptr_vptr(0xa02, (addr), (buf),(len),(cb),(r))
 #define flash_read(addr, buf, len, cb, r) k_syscall_ex_ri32_uint32_vptr_uint32_vptr_vptr(0xa01, (addr), (buf),(len),(cb),(r))
+#define flash_getattr(index, key, val, val_len) k_syscall_ex_getflashattr(0xa05, (index), (key), (val), (val_len))
 
 lua_State *_cb_L;
 #define MAXPINSPEC 20
@@ -1551,6 +1556,27 @@ int libstorm_flash_read(lua_State *L)
     }
     return 0;
 }
+
+//lua: storm.flash.getattr(id) -> key, val, val_len
+int libstorm_flash_getattr(lua_State *L)
+{
+    int rv;
+    uint8_t index = lua_tonumber(L, 1);
+    char key[16];
+    char val[64];
+    uint8_t val_len;
+    rv = flash_getattr(index, (uint32_t) key, (uint32_t) val,  &val_len);
+    if (rv != 0)
+    {
+        return luaL_error(L, "Could not get attribute %d", index);
+    }
+    lua_pushstring(L, key);
+    lua_pushnumber(L, val_len);
+    lua_pushlstring(L, val, val_len);
+    // push the value on the stack
+    return 3;
+}
+
 // Module function map
 #define MIN_OPT_LEVEL 2
 #include "lrodefs.h"
@@ -1700,6 +1726,7 @@ const LUA_REG_TYPE libstorm_flash_map[] =
 {
     { LSTRKEY( "write" ),  LFUNCVAL ( libstorm_flash_write ) },
     { LSTRKEY( "read" ),  LFUNCVAL ( libstorm_flash_read ) },
+    { LSTRKEY( "getattr" ), LFUNCVAL ( libstorm_flash_getattr ) },
     { LNILKEY, LNILVAL }
 };
 
