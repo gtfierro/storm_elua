@@ -129,6 +129,8 @@ int32_t __attribute__((naked)) k_syscall_ex_getflashattr(uint32_t id, uint32_t a
 #define udp_clear_retrystats() k_syscall_ex_rvoid(0x309)
 #define udp_get_routestats() k_syscall_ex_rvoid(0x30a)
 #define udp_clear_routestats() k_syscall_ex_rvoid(0x30b)
+#define udp_get_rplstats() k_syscall_ex_rvoid(0x30c)
+#define udp_clear_rplstats() k_syscall_ex_rvoid(0x30d)
 
 //#define udp_unset_recvfrom(sockid) k_syscall_ex_ri32_u32(0x306, (sockid))
 
@@ -1252,12 +1254,24 @@ int libstorm_net_clear_retry_stats(lua_State *L)
 int libstorm_net_route_stats(lua_State *L)
 {
     void* routestats = udp_get_routestats();
-    lua_pushlstring(L, routestats, 6);
+    lua_pushlstring(L, routestats, 5);
     return 1;
 }
 int libstorm_net_clear_route_stats(lua_State *L)
 {
     udp_clear_routestats();
+    return 0;
+}
+
+int libstorm_net_rpl_stats(lua_State *L)
+{
+    void* rplstats = udp_get_rplstats();
+    lua_pushlstring(L, rplstats, 5);
+    return 1;
+}
+int libstorm_net_clear_rpl_stats(lua_State *L)
+{
+    udp_clear_rplstats();
     return 0;
 }
 
@@ -1709,9 +1723,11 @@ const LUA_REG_TYPE libstorm_net_map[] =
     { LSTRKEY( "stats" ), LFUNCVAL ( libstorm_net_stats )},
     { LSTRKEY( "retrystats" ), LFUNCVAL ( libstorm_net_retry_stats )},
     { LSTRKEY( "routestats" ), LFUNCVAL ( libstorm_net_route_stats )},
+    { LSTRKEY( "rplstats" ), LFUNCVAL ( libstorm_net_rpl_stats )},
     { LSTRKEY( "clearstats" ), LFUNCVAL ( libstorm_net_clear_stats )},
     { LSTRKEY( "clearretrystats" ), LFUNCVAL ( libstorm_net_clear_retry_stats )},
     { LSTRKEY( "clearroutestats" ), LFUNCVAL ( libstorm_net_clear_route_stats )},
+    { LSTRKEY( "clearrplstats" ), LFUNCVAL ( libstorm_net_clear_rpl_stats )},
  //   { LSTRKEY( "set_recvfrom" ), LFUNCVAL ( libstorm_net_recvfrom ) },
  //   { LSTRKEY( "unset_recvfrom" ), LFUNCVAL ( libstorm_net_recvfrom ) },
     { LNILKEY, LNILVAL }
