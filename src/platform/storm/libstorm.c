@@ -100,6 +100,10 @@ int32_t __attribute__((naked)) k_syscall_ex_getflashattr(uint32_t id, uint32_t a
 {
     __syscall_body(ABI_ID_SYSCALL_EX);
 }
+int32_t __attribute__((naked)) k_syscall_ex_setflashattr(uint32_t id, uint32_t a, uint32_t b, uint32_t c, uint8_t d)
+{
+    __syscall_body(ABI_ID_SYSCALL_EX);
+}
 int32_t __attribute__((naked)) k_syscall_ex_ri32_u32_cptr_u32(uint32_t id, uint32_t arg0, char* arg1, uint32_t arg2)
 {
     __syscall_body(ABI_ID_SYSCALL_EX);
@@ -195,6 +199,7 @@ int32_t __attribute__((naked)) k_syscall_ex_ri32_u32_cptr_int_u16ptr(uint32_t id
 #define flash_write(addr, buf, len, cb, r) k_syscall_ex_ri32_uint32_vptr_uint32_vptr_vptr(0xa02, (addr), (buf),(len),(cb),(r))
 #define flash_read(addr, buf, len, cb, r) k_syscall_ex_ri32_uint32_vptr_uint32_vptr_vptr(0xa01, (addr), (buf),(len),(cb),(r))
 #define flash_getattr(index, key, val, val_len) k_syscall_ex_getflashattr(0xa05, (index), (key), (val), (val_len))
+#define flash_setattr(index, key, val, val_len) k_syscall_ex_setflashattr(0xa06, (index), (key), (val), (val_len))
 
 //------------ TCP
 #define SHUT_RD 0
@@ -2576,6 +2581,22 @@ int libstorm_flash_getattr(lua_State *L)
     return 2;
 }
 
+//lua: storm.flash.setattr(id) -> key, val, val_len
+int libstorm_flash_setattr(lua_State *L)
+{
+    int rv;
+    uint8_t index = lua_tonumber(L, 1);
+    storm_array_t *key = lua_touserdata(L, 2);
+    storm_array_t *val = lua_touserdata(L, 3);
+    rv = flash_setattr(index, ARR_START(key), ARR_START(val), (uint8_t)(val->len & 0xff));
+    //if (rv != 0)
+    //{
+    //    return luaL_error(L, "Could not set attribute %d", index);
+    //}
+    lua_pushnumber(L, rv);
+    return 1;
+}
+
 // Module function map
 #define MIN_OPT_LEVEL 2
 #include "lrodefs.h"
@@ -2768,6 +2789,7 @@ const LUA_REG_TYPE libstorm_flash_map[] =
     { LSTRKEY( "write" ),  LFUNCVAL ( libstorm_flash_write ) },
     { LSTRKEY( "read" ),  LFUNCVAL ( libstorm_flash_read ) },
     { LSTRKEY( "getattr" ), LFUNCVAL ( libstorm_flash_getattr ) },
+    { LSTRKEY( "setattr" ), LFUNCVAL ( libstorm_flash_setattr ) },
     { LNILKEY, LNILVAL }
 };
 
